@@ -285,72 +285,28 @@ CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
         logger.info("=== 应用 SUSFS 补丁 ===")
         self._chdir(self.work_dir)
         common_dir = self.work_dir / "common"
-
-        susfs_patch = (
-            self.susfs_dir
-            / "kernel_patches"
-            / self.config.get_susfs_patch_filename()
-        )
-
+        susfs_patch = self.susfs_dir / "kernel_patches" / self.config.get_susfs_patch_filename()
         if susfs_patch.exists():
-            self._run_cmd(
-                f"cp {susfs_patch} {common_dir}/",
-                check=False
-            )
-
+            self._run_cmd(f"cp {susfs_patch} {common_dir}/", check=False)
         for src, dst in [
-            (
-                self.susfs_dir / "kernel_patches/fs",
-                common_dir / "fs/"
-            ),
-            (
-                self.susfs_dir / "kernel_patches/include/linux",
-                common_dir / "include/linux/"
-            ),
+            (self.susfs_dir / "kernel_patches/fs", common_dir / "fs/"),
+            (self.susfs_dir / "kernel_patches/include/linux", common_dir / "include/linux/"),
         ]:
             if src.exists():
-                self._run_cmd(
-                    f"cp -r {src}/* {dst}",
-                    check=False
-                )
-
+                self._run_cmd(f"cp -r {src}/* {dst}", check=False)
         if susfs_patch.exists():
-            patch_file = (
-                common_dir
-                / self.config.get_susfs_patch_filename()
-            )
+            patch_file = common_dir / self.config.get_susfs_patch_filename()
             if patch_file.exists():
                 self._chdir(common_dir)
-                self._run_cmd(
-                    f"patch -p1 --fuzz=3 < {patch_file}",
-                    check=False
-                )
+                self._run_cmd(f"patch -p1 --fuzz=3 < {patch_file}", check=False)
                 self._chdir(self.work_dir)
 
     def apply_sukisu_patches(self):
         logger.info("=== 应用 SukiSU 补丁 ===")
-
-        # 69_hide_stuff.patch 与 android13-5.15 不可靠兼容
-        if (
-            self.config.android_version == "android13"
-            and self.config.kernel_version == "5.15"
-        ):
-            logger.warning(
-                "跳过不兼容的 69_hide_stuff.patch：android13-5.15"
-            )
-            return
-
         self._chdir(self.work_dir / "common")
-        hooks_patch = (
-            self.sukisu_patch_dir / "69_hide_stuff.patch"
-        )
-
+        hooks_patch = self.sukisu_patch_dir / "69_hide_stuff.patch"
         if hooks_patch.exists():
-            self._run_cmd(
-                f"cp {hooks_patch} . && "
-                "patch -p1 -F 3 < 69_hide_stuff.patch",
-                check=False
-            )
+            self._run_cmd(f"cp {hooks_patch} . && patch -p1 -F 3 < 69_hide_stuff.patch", check=False)
 
     def apply_zram_patches(self):
         if not self.config.use_zram:
