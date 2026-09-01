@@ -303,10 +303,25 @@ CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
 
     def apply_sukisu_patches(self):
         logger.info("=== 应用 SukiSU 补丁 ===")
+    
+        if (
+            self.config.android_version == "android13"
+            and self.config.kernel_version == "5.15"
+        ):
+            logger.warning(
+                "跳过不兼容的 69_hide_stuff.patch：android13-5.15"
+            )
+            return
+    
         self._chdir(self.work_dir / "common")
         hooks_patch = self.sukisu_patch_dir / "69_hide_stuff.patch"
+    
         if hooks_patch.exists():
-            self._run_cmd(f"cp {hooks_patch} . && patch -p1 -F 3 < 69_hide_stuff.patch", check=False)
+            self._run_cmd(
+                f"cp {hooks_patch} . && "
+                "patch -p1 -F 3 < 69_hide_stuff.patch",
+                check=False
+            )
 
     def apply_zram_patches(self):
         if not self.config.use_zram:
