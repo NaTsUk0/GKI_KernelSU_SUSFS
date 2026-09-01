@@ -281,10 +281,21 @@ CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
             with open(kconfig_file, "w") as f:
                 f.write(content)
 
-    def apply_susfs_patches(self):
-        logger.info("=== 应用 SUSFS 补丁 ===")
-        self._chdir(self.work_dir)
-        common_dir = self.work_dir / "common"
+    def apply_sukisu_patches(self):
+        logger.info("=== 应用 SukiSU 补丁 ===")
+    
+        # 69_hide_stuff.patch 与 android13-5.15 旧版 task_mmu.c
+        # 不能可靠匹配，避免 fuzz 错位后导致编译失败
+        if (
+            self.config.android_version == "android13"
+            and self.config.kernel_version == "5.15"
+        ):
+            logger.warning(
+                "跳过不兼容的 69_hide_stuff.patch：android13-5.15"
+            )
+            return
+    
+        self._chdir(self.work_dir / "common")
         susfs_patch = self.susfs_dir / "kernel_patches" / self.config.get_susfs_patch_filename()
         if susfs_patch.exists():
             self._run_cmd(f"cp {susfs_patch} {common_dir}/", check=False)
